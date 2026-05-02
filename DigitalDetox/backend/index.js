@@ -17,6 +17,9 @@ app.use('/api/auth', require('./routes/auth'));
 // App Limits Routes
 app.use('/api/limits', require('./routes/limits'));
 
+// Screen Log Routes
+app.use('/api/logs', require('./routes/logs'));
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'DigitalDetox API is running' });
