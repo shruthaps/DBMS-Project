@@ -4,7 +4,19 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-
+// ─────────────────────────────────────────────
+//  POST /api/logs/submit
+//  Body: { date: "YYYY-MM-DD", logs: [{ limit_id, actual_usage_min }] }
+//
+//  Business Logic:
+//    1. For each app: compare actual vs limit → award 10 pts if passed
+//    2. If ALL passed   → increment streak
+//       If ANY failed:
+//          shield active → deduct 1 shield, keep streak
+//          no shield     → reset streak to 0
+//    3. Check for level-up after points update → grant shields
+//    4. Update active challenges → complete & award bonus if target_days met
+// ─────────────────────────────────────────────
 router.post('/submit', authMiddleware, async (req, res) => {
   const conn = await db.getConnection();
   try {
@@ -13,7 +25,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
     const userId = req.user.id;
     const { date, logs } = req.body;
 
-
+    // Validate request body
     if (!date || !Array.isArray(logs) || logs.length === 0) {
       await conn.rollback();
       conn.release();
@@ -22,6 +34,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
       });
     }
 
+    // Prevent duplicate submission for the same date
     const [existingLogs] = await conn.query(
       'SELECT log_id FROM SCREEN_LOG WHERE user_id = ? AND log_date = ? LIMIT 1',
       [userId, date]
