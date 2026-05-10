@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Detox - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-welcome">
+                <h1>📱 Digital Detox</h1>
+                <span id="userName"></span>
+            </div>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+
+        <!-- User Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>🏆 Level</h3>
+                <p id="levelName">Bronze</p>
+                <div class="progress-container">
+                    <div id="levelProgress" class="progress-bar"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>⭐ Total Points</h3>
+                <p id="totalPoints">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>🔥 Current Streak</h3>
+                <p id="currentStreak">0 days</p>
+            </div>
+            <div class="stat-card">
+                <h3>🛡️ Shields</h3>
+                <p id="shields">0</p>
+            </div>
+        </div>
+
+        <!-- App Limits Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📊 Today's Limits</h2>
+                <button id="openLimitModal" class="btn-add">+ New Limit</button>
+            </div>
+            <div id="appLimits" class="limits-grid">
+                <!-- Limits will be loaded here -->
+            </div>
+
+            <div id="usageSubmitSection" style="margin-top: 30px; display: none;">
+                <button id="submitUsageBtn" class="btn">Log Today's Usage</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px;">
+            <!-- Active Challenges -->
+            <div class="section">
+                <h2>🏆 Active Challenges</h2>
+                <div id="activeChallenges"></div>
+                <div style="margin-top: 20px;">
+                    <a href="challenges.html" class="btn">Browse Challenges</a>
+                </div>
+            </div>
+
+            <!-- Available Coupons -->
+            <div class="section">
+                <h2>🎁 Rewards</h2>
+                <div id="availableCoupons"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Limit Modal -->
+    <div id="limitModal" class="modal">
+        <div class="modal-content">
+            <h2>Add App Limit</h2>
+            <input type="text" id="newAppName" placeholder="App Name (e.g. Instagram)">
+            <input type="number" id="newAppLimit" placeholder="Daily Limit (Minutes)">
+            <button id="saveLimitBtn" class="btn">Save Limit</button>
+            <button onclick="closeModal()"
+                style="background:none; border:none; color:var(--text-secondary); width:100%; margin-top:10px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
