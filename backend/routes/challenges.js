@@ -209,4 +209,49 @@ router.post('/group', authMiddleware, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────
+//  POST /api/challenges/join-by-id
+//  Join a challenge using a manual ID (for group invites)
+// ─────────────────────────────────────────────
+router.post('/join-by-id', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { challengeId } = req.body;
+
+    if (!challengeId) {
+      return res.status(400).json({ message: 'Challenge ID is required.' });
+    }
+
+    // Check if challenge exists
+    const [[challenge]] = await db.query(
+      'SELECT * FROM CHALLENGE WHERE challenge_id = ?',
+      [challengeId]
+    );
+
+    if (!challenge) {
+      return res.status(404).json({ message: 'Invalid Challenge ID.' });
+    }
+
+    // Check if already joined
+    const [[existing]] = await db.query(
+      'SELECT uc_id FROM USER_CHALLENGE WHERE user_id = ? AND challenge_id = ?',
+      [userId, challengeId]
+    );
+
+    if (existing) {
+      return res.status(409).json({ message: 'You are already in this group!' });
+    }
+
+    await db.query(
+      'INSERT INTO USER_CHALLENGE (user_id, challenge_id, status) VALUES (?, ?, "IN_PROGRESS")',
+      [userId, challengeId]
+    );
+
+    res.status(201).json({ message: 'Successfully joined the group!', title: challenge.title });
+  } catch (error) {
+    console.error('Join by ID error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
