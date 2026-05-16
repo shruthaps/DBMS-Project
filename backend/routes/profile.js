@@ -4,11 +4,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// ─────────────────────────────────────────────
-//  GET /api/profile
-//  Returns the authenticated user's full profile,
-//  joined with their current LEVEL row.
-// ─────────────────────────────────────────────
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;

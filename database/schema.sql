@@ -138,3 +138,17 @@ INSERT INTO LEVEL (name, min_points, max_points, coupon_discount_pct, shields_gr
 ('Gold', 1500, 3499, 10.00, 2),
 ('Platinum', 3500, 999999, 20.00, 3);
 
+-- 11. FRIENDSHIP Table
+CREATE TABLE IF NOT EXISTS FRIENDSHIP (
+    friendship_id INT AUTO_INCREMENT PRIMARY KEY,
+    requester_id  INT NOT NULL,
+    addressee_id  INT NOT NULL,
+    status        ENUM('PENDING', 'ACCEPTED', 'DECLINED') DEFAULT 'PENDING',
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_friendship (requester_id, addressee_id),
+    FOREIGN KEY (requester_id) REFERENCES USER(user_id),
+    FOREIGN KEY (addressee_id) REFERENCES USER(user_id)
+);
+
+

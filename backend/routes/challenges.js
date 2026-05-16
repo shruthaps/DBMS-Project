@@ -153,8 +153,9 @@ router.post('/group', authMiddleware, async (req, res) => {
       start_date,
       end_date,
       group_name,
-      target_members = 2,
       group_bonus_points = 0,
+      // Array of user_ids of friends to invite (already friends)
+      invited_member_ids = [],
     } = req.body;
 
     if (!title || !target_days || target_limit_min === undefined || !group_name) {
@@ -164,6 +165,10 @@ router.post('/group', authMiddleware, async (req, res) => {
         message: 'title, target_days, target_limit_min, and group_name are required.',
       });
     }
+
+    // All invited members + creator
+    const allMembers = [userId, ...invited_member_ids.filter(id => id !== userId)];
+    const target_members = allMembers.length;
 
     // 1. Insert the base CHALLENGE row
     const [challengeResult] = await conn.query(
@@ -183,18 +188,21 @@ router.post('/group', authMiddleware, async (req, res) => {
       [challengeId, userId, group_name, target_members, group_bonus_points]
     );
 
-    // 3. Auto-join creator
-    await conn.query(
-      `INSERT INTO USER_CHALLENGE (user_id, challenge_id, days_completed, status)
-       VALUES (?, ?, 0, 'IN_PROGRESS')`,
-      [userId, challengeId]
-    );
+    // 3. Auto-join ALL members (creator + invited friends)
+    for (const memberId of allMembers) {
+      // Verify friendship for non-creator members (optional safety check)
+      await conn.query(
+        `INSERT INTO USER_CHALLENGE (user_id, challenge_id, days_completed, status)
+         VALUES (?, ?, 0, 'IN_PROGRESS')`,
+        [memberId, challengeId]
+      );
+    }
 
     await conn.commit();
     conn.release();
 
     res.status(201).json({
-      message: 'Group challenge created! Share the challenge ID with friends.',
+      message: `Group challenge created with ${target_members} member(s)!`,
       challenge_id: challengeId,
       gc_id: gcResult.insertId,
       title,

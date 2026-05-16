@@ -3,61 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Detox - Challenges</title>
+    <title>Digital Detox – Challenges & Friends</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .back-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
+        /* ── Tab bar ── */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 30px;
         }
+        .tab-bar button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .tab-bar button.active {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(106,17,203,0.4);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── User / Friend cards ── */
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .person-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .person-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+        .person-avatar {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: bold; color: #fff;
+        }
+        .person-name { font-weight: 700; font-size: 1rem; }
+        .person-meta { font-size: 0.78rem; color: var(--text-secondary); display: flex; gap: 12px; }
+        .person-meta span { display: flex; align-items: center; gap: 4px; }
+
+        /* Friend-action buttons */
+        .friend-btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            align-self: flex-start;
+        }
+        .friend-btn.add    { background: linear-gradient(135deg,#6a11cb,#2575fc); color:#fff; }
+        .friend-btn.add:hover { opacity: 0.88; }
+        .friend-btn.pending { background: rgba(255,255,255,0.07); color: var(--text-secondary); border: 1px solid var(--glass-border); cursor: default; }
+        .friend-btn.friends { background: rgba(0,242,254,0.12); color: #00f2fe; border: 1px solid rgba(0,242,254,0.3); cursor: default; }
+        .friend-btn.accept  { background: linear-gradient(135deg,#11998e,#38ef7d); color:#fff; }
+        .friend-btn.accept:hover { opacity: 0.88; }
+        .friend-btn.decline { background: rgba(255,75,43,0.15); color:#ff4b2b; border:1px solid rgba(255,75,43,0.3); margin-left:6px; }
+        .friend-btn.decline:hover { background: rgba(255,75,43,0.28); }
+
+        /* Checkbox for friend selection (create group modal) */
+        .friend-check-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .friend-check-item:hover { background: rgba(106,17,203,0.12); }
+        .friend-check-item input[type="checkbox"] { width:18px; height:18px; accent-color:#6a11cb; cursor:pointer; }
+        .friend-check-item .fc-name { font-weight:600; font-size:0.9rem; }
+        .friend-check-item .fc-meta { font-size:0.78rem; color:var(--text-secondary); }
+
+        /* Pending request badge */
+        .req-badge {
+            display:inline-flex; align-items:center; justify-content:center;
+            background: #ff4b2b;
+            color:#fff; font-size:0.68rem; font-weight:700;
+            border-radius:50%; width:18px; height:18px;
+            margin-left:6px; vertical-align:middle;
+        }
+
+        /* Back link */
+        .back-link { color: var(--text-secondary); text-decoration:none; font-weight:600; transition:0.3s; }
         .back-link:hover { color: var(--accent-purple); }
+
+        /* Search bar */
+        .search-bar {
+            width: 100%; padding: 11px 16px;
+            background: rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+            border-radius: 10px; color:#fff; font-size:0.9rem; margin-bottom:20px;
+            outline:none; transition: border-color 0.2s;
+        }
+        .search-bar:focus { border-color: #6a11cb; }
+
+        /* Section header row */
+        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+
+        /* Modal overlay for create group */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px); z-index:1000; align-items:center; justify-content:center; }
+        .modal-content { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:20px; padding:32px; width:90%; max-width:480px; max-height:85vh; overflow-y:auto; }
+        .modal-content h2 { margin-bottom:20px; }
+        .modal-input { width:100%; margin-bottom:14px; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:10px; color:#fff; font-size:0.9rem; box-sizing:border-box; }
+        .modal-input:focus { outline:none; border-color:#6a11cb; }
+        .modal-row { display:flex; gap:10px; margin-bottom:14px; }
+        .modal-row .modal-input { margin-bottom:0; }
+        .modal-buttons { display:flex; gap:10px; margin-top:20px; }
+        .modal-buttons button { flex:1; padding:12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; font-size:0.9rem; transition:all 0.2s; }
+        .btn-cancel { background:rgba(255,255,255,0.07); color:var(--text-secondary); border:1px solid var(--glass-border) !important; }
+        .btn-confirm { background:linear-gradient(135deg,#6a11cb,#2575fc); color:#fff; box-shadow:0 4px 14px rgba(106,17,203,0.35); }
+        .btn-confirm:hover { opacity:0.88; }
+        .friends-select-list { display:flex; flex-direction:column; gap:8px; margin-bottom:4px; max-height:220px; overflow-y:auto; }
+        .no-friends-msg { color:var(--text-secondary); font-size:0.85rem; padding:10px 0; }
+
+        /* Challenge list enhancements */
+        .challenge-card { position:relative; }
+        .challenge-type-badge {
+            position:absolute; top:12px; right:12px;
+            font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:20px;
+        }
+        .badge-solo  { background:rgba(0,242,254,0.15); color:#00f2fe; }
+        .badge-group { background:rgba(106,17,203,0.25); color:#c084fc; }
+        .group-members { margin-top:8px; font-size:0.78rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <h1>🏆 Challenges</h1>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <button onclick="showCreateGroupModal()" class="btn-primary" style="padding: 8px 15px; font-size: 0.9rem;">+ Create Group</button>
-                <div style="display: flex; background: var(--bg-card); padding: 5px; border-radius: 8px; border: 1px solid var(--glass-border);">
-                    <input type="text" id="joinIdInput" placeholder="Enter ID..." style="background: transparent; border: none; color: white; padding: 5px; width: 80px; font-size: 0.8rem;">
-                    <button onclick="joinGroupById()" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Join</button>
-                </div>
-                <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
-            </div>
+            <a href="dashboard.html" class="back-link">← Dashboard</a>
         </div>
-        
-        <div class="section">
-            <h2 style="margin-bottom: 25px;">Available Challenges</h2>
-            <div id="challengesList" class="limits-grid">
-                <!-- Challenges will be loaded here -->
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button id="tab-challenges" class="active" onclick="switchTab('challenges')">⚡ Challenges</button>
+            <button id="tab-friends"    onclick="switchTab('friends')">👥 Find People</button>
+            <button id="tab-requests"   onclick="switchTab('requests')">🔔 Requests<span id="reqBadge" class="req-badge" style="display:none">0</span></button>
+            <button id="tab-myfriends" onclick="switchTab('myfriends')">❤️ My Friends</button>
+        </div>
+
+        <!-- ── TAB: CHALLENGES ── -->
+        <div id="panel-challenges" class="tab-panel active">
+            <div class="section-header">
+                <h2>Solo Challenges</h2>
+                <button class="btn-primary" style="padding:9px 18px;font-size:0.85rem;" onclick="openCreateGroupModal()">+ Create Group Challenge</button>
+            </div>
+            <div id="soloChallengesList" class="limits-grid"></div>
+
+            <h2 style="margin:36px 0 20px;">Group Challenges</h2>
+            <div id="groupChallengesList" class="limits-grid"></div>
+        </div>
+
+        <!-- ── TAB: FIND PEOPLE ── -->
+        <div id="panel-friends" class="tab-panel">
+            <h2 style="margin-bottom:16px;">Find People</h2>
+            <input type="text" id="peopleSearch" class="search-bar" placeholder="🔍  Search by name…" oninput="filterPeople()">
+            <div id="allUsersList" class="people-grid">
+                <p style="color:var(--text-secondary);">Loading users…</p>
             </div>
         </div>
 
-        <div class="section" style="margin-top: 40px;">
-            <h2 style="margin-bottom: 25px;">Group Challenges</h2>
-            <div id="groupChallengesList" class="limits-grid">
-                <p style="color: var(--text-secondary); grid-column: 1/-1;">Coming soon: Form groups and detox together!</p>
+        <!-- ── TAB: REQUESTS ── -->
+        <div id="panel-requests" class="tab-panel">
+            <h2 style="margin-bottom:20px;">Friend Requests</h2>
+            <div id="requestsList" class="people-grid">
+                <p style="color:var(--text-secondary);">Loading…</p>
+            </div>
+        </div>
+
+        <!-- ── TAB: MY FRIENDS ── -->
+        <div id="panel-myfriends" class="tab-panel">
+            <h2 style="margin-bottom:20px;">My Friends</h2>
+            <div id="myFriendsList" class="people-grid">
+                <p style="color:var(--text-secondary);">Loading…</p>
             </div>
         </div>
     </div>
-    <!-- Create Group Modal -->
+
+    <!-- ── Create Group Challenge Modal ── -->
     <div id="createGroupModal" class="modal">
         <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">Create Group Challenge</h2>
+            <h2>🤝 Create Group Challenge</h2>
             <form id="createGroupForm">
-                <input type="text" id="groupTitle" placeholder="Challenge Title (e.g. Family Detox)" required style="width: 100%; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
-                <input type="text" id="groupName" placeholder="Group Name (e.g. The Avengers)" required style="width: 100%; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="number" id="groupDays" placeholder="Days" required style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
-                    <input type="number" id="groupLimit" placeholder="Limit (min)" required style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                <input type="text" id="groupTitle" class="modal-input" placeholder="Challenge Title (e.g. Family Detox Week)" required>
+                <input type="text" id="groupName"  class="modal-input" placeholder="Group Name (e.g. The Detox Squad)" required>
+                <div class="modal-row">
+                    <input type="number" id="groupDays"  class="modal-input" placeholder="Days" min="1" required>
+                    <input type="number" id="groupLimit" class="modal-input" placeholder="Screen limit (min)" min="1" required>
                 </div>
-                <input type="number" id="groupBonus" placeholder="Bonus Points" style="width: 100%; margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                <input type="number" id="groupBonus" class="modal-input" placeholder="Bonus Points (e.g. 200)" min="0">
+
+                <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">👇 Select friends to add (they'll be auto-joined):</p>
+                <div id="friendsCheckList" class="friends-select-list">
+                    <p class="no-friends-msg">Loading friends…</p>
+                </div>
+
                 <div class="modal-buttons">
-                    <button type="button" onclick="hideCreateGroupModal()" class="btn-primary" style="background: transparent; border: 1px solid var(--glass-border);">Cancel</button>
-                    <button type="submit" class="btn-primary">Create & Join</button>
+                    <button type="button" class="btn-cancel" onclick="closeCreateGroupModal()">Cancel</button>
+                    <button type="submit" class="btn-confirm">🚀 Create &amp; Launch</button>
                 </div>
             </form>
         </div>

@@ -29,6 +29,9 @@ app.use('/api/coupons', require('./routes/coupons'));
 // Profile Route
 app.use('/api/profile', require('./routes/profile'));
 
+// Friends Route
+app.use('/api/friends', require('./routes/friends'));
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'DigitalDetox API is running' });
