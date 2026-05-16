@@ -137,3 +137,4 @@ INSERT INTO LEVEL (name, min_points, max_points, coupon_discount_pct, shields_gr
 ('Silver', 500, 1499, 5.00, 1),
 ('Gold', 1500, 3499, 10.00, 2),
 ('Platinum', 3500, 999999, 20.00, 3);
+

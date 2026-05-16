@@ -19,7 +19,14 @@
     <div class="container">
         <div class="header">
             <h1>🏆 Challenges</h1>
-            <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button onclick="showCreateGroupModal()" class="btn-primary" style="padding: 8px 15px; font-size: 0.9rem;">+ Create Group</button>
+                <div style="display: flex; background: var(--bg-card); padding: 5px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                    <input type="text" id="joinIdInput" placeholder="Enter ID..." style="background: transparent; border: none; color: white; padding: 5px; width: 80px; font-size: 0.8rem;">
+                    <button onclick="joinGroupById()" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Join</button>
+                </div>
+                <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+            </div>
         </div>
         
         <div class="section">
@@ -36,6 +43,26 @@
             </div>
         </div>
     </div>
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Create Group Challenge</h2>
+            <form id="createGroupForm">
+                <input type="text" id="groupTitle" placeholder="Challenge Title (e.g. Family Detox)" required style="width: 100%; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                <input type="text" id="groupName" placeholder="Group Name (e.g. The Avengers)" required style="width: 100%; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="number" id="groupDays" placeholder="Days" required style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                    <input type="number" id="groupLimit" placeholder="Limit (min)" required style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                </div>
+                <input type="number" id="groupBonus" placeholder="Bonus Points" style="width: 100%; margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: white;">
+                <div class="modal-buttons">
+                    <button type="button" onclick="hideCreateGroupModal()" class="btn-primary" style="background: transparent; border: 1px solid var(--glass-border);">Cancel</button>
+                    <button type="submit" class="btn-primary">Create & Join</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
