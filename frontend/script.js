@@ -355,9 +355,19 @@ async function fetchPeopleData() {
             apiRequest('/friends'),
             apiRequest('/friends/requests')
         ]);
-        if (usersRes && usersRes.ok)   _allUsers  = (await usersRes.json()).users   || [];
+
+        if (usersRes && usersRes.ok) {
+            _allUsers = (await usersRes.json()).users || [];
+        } else {
+            // Surface the actual error so we can debug
+            const errBody = usersRes ? await usersRes.text() : 'no response';
+            console.error('GET /friends/users failed:', usersRes?.status, errBody);
+            const container = document.getElementById('allUsersList');
+            if (container) container.innerHTML = `<p style="color:#ff4b2b;">⚠️ Could not load users (${usersRes?.status}): ${errBody}</p>`;
+        }
+
         if (friendsRes && friendsRes.ok) _myFriends = (await friendsRes.json()).friends || [];
-        if (reqRes && reqRes.ok)        _requests  = (await reqRes.json()).requests  || [];
+        if (reqRes && reqRes.ok)         _requests  = (await reqRes.json()).requests  || [];
 
         // Update badge
         const badge = document.getElementById('reqBadge');
@@ -367,6 +377,8 @@ async function fetchPeopleData() {
         }
     } catch (err) {
         console.error('fetchPeopleData error:', err);
+        const container = document.getElementById('allUsersList');
+        if (container) container.innerHTML = `<p style="color:#ff4b2b;">⚠️ JS error: ${err.message}</p>`;
     }
 }
 
@@ -434,11 +446,17 @@ function renderAllUsers() {
     const container = document.getElementById('allUsersList');
     if (!container) return;
 
+    if (_allUsers.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">No users found. (Check console for errors)</p>';
+        return;
+    }
+
     const q = (document.getElementById('peopleSearch')?.value || '').toLowerCase();
-    const filtered = _allUsers.filter(u => u.name.toLowerCase().includes(q));
+    // Guard against null names from bad DB rows
+    const filtered = _allUsers.filter(u => u.name && u.name.toLowerCase().includes(q));
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-secondary);">No users found.</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary);">No users match your search.</p>';
         return;
     }
 
@@ -448,7 +466,8 @@ function renderAllUsers() {
 function filterPeople() { renderAllUsers(); }
 
 function personCard(u) {
-    const initial = u.name.charAt(0).toUpperCase();
+    const displayName = u.name || 'Unknown User';
+    const initial = displayName.charAt(0).toUpperCase();
     let actionHtml = '';
 
     if (u.friendship_status === 'ACCEPTED') {
@@ -469,7 +488,7 @@ function personCard(u) {
             <div style="display:flex;align-items:center;gap:12px;">
                 <div class="person-avatar">${initial}</div>
                 <div>
-                    <div class="person-name">${u.name}</div>
+                    <div class="person-name">${displayName}</div>
                     <div class="person-meta">
                         <span>🏅 ${u.level_name || 'Bronze'}</span>
                         <span>⭐ ${u.total_points || 0} pts</span>
