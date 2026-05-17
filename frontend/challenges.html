@@ -171,11 +171,13 @@
         <div id="panel-challenges" class="tab-panel active">
             <div class="section-header">
                 <h2>Solo Challenges</h2>
-                <button class="btn-primary" style="padding:9px 18px;font-size:0.85rem;" onclick="openCreateGroupModal()">+ Create Group Challenge</button>
             </div>
             <div id="soloChallengesList" class="limits-grid"></div>
 
-            <h2 style="margin:36px 0 20px;">Group Challenges</h2>
+            <div class="section-header" style="margin:36px 0 20px;">
+                <h2 style="margin:0;">Group Challenges</h2>
+                <button class="join-btn" style="padding:10px 20px; font-size:0.85rem; border:none; background: linear-gradient(135deg, #6a11cb, #2575fc); box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4); border-radius: 10px; color:#fff; font-weight:bold; cursor:pointer;" onclick="openCreateGroupModal()">+ Create Group Challenge</button>
+            </div>
             <div id="groupChallengesList" class="limits-grid"></div>
         </div>
 
