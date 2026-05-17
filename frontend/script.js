@@ -1,4 +1,6 @@
-const API_BASE = 'https://digitaldetox-api.onrender.com/api';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+    ? 'http://localhost:3000/api'
+    : 'https://digitaldetox-api.onrender.com/api';
 
 // Helper function to handle fetch requests with authentication
 async function apiRequest(endpoint, options = {}) {
@@ -180,11 +182,11 @@ async function loadDashboard() {
                 `).join('')}
             </div>
 
-            <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
-                <button id="syncBtn" onclick="simulateSync()" class="btn-primary" style="width: 100%; padding: 18px; font-size: 1.1rem; font-weight: bold; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); box-shadow: 0 10px 20px rgba(106, 17, 203, 0.3);">
+            <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px; display: flex; flex-direction: column; align-items: flex-end;">
+                <button id="syncBtn" onclick="simulateSync()" class="btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;">
                     🔄 Sync with Device Data
                 </button>
-                <p style="text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px;">
+                <p style="text-align: right; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;">
                     Last synced: Just now
                 </p>
             </div>

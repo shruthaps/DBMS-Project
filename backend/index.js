@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const db = require('./db');
 
@@ -38,6 +39,10 @@ app.get('/api/health', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
+  
+  // Auto-seed the database with challenges and verify level points
+  const seedDatabase = require('./seed');
+  await seedDatabase();
 });

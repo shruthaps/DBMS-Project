@@ -133,10 +133,17 @@ CREATE TABLE USER_COUPON (
 
 -- Initial Data for LEVELS
 INSERT INTO LEVEL (name, min_points, max_points, coupon_discount_pct, shields_granted) VALUES
-('Bronze', 0, 499, 0.00, 0),
-('Silver', 500, 1499, 5.00, 1),
-('Gold', 1500, 3499, 10.00, 2),
-('Platinum', 3500, 999999, 20.00, 3);
+('Bronze', 0, 40, 0.00, 0),
+('Silver', 41, 70, 5.00, 1),
+('Gold', 71, 100, 10.00, 2),
+('Platinum', 101, 999999, 20.00, 3);
+
+-- Initial Data for CHALLENGES
+INSERT INTO CHALLENGE (title, description, type, target_days, target_limit_min, bonus_points) VALUES
+('Weekend Warrior', 'Stay under 2 hours of screen time for the whole weekend!', 'SOLO', 2, 120, 50),
+('Social Media Detox', 'Limit all social media apps to 30 mins a day for a week.', 'SOLO', 7, 30, 200),
+('Study Focus', 'No games or entertainment apps during study hours.', 'SOLO', 5, 0, 150),
+('Early Bird', 'No screen time before 8 AM for 3 days.', 'SOLO', 3, 0, 100);
 
 -- 11. FRIENDSHIP Table
 CREATE TABLE IF NOT EXISTS FRIENDSHIP (
