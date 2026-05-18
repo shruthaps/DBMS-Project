@@ -12,13 +12,6 @@ const generateCode = (brandName) => {
   return `${prefix}-${rand}`;
 };
 
-// ─────────────────────────────────────────────
-//  GET /api/coupons
-//  Browse all available coupons, filtered to those the user's level can access.
-//  Query params:
-//    ?category=food       (optional filter by category)
-//    ?all=true            (admin/debug — show all regardless of level)
-// ─────────────────────────────────────────────
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId   = req.user.id;

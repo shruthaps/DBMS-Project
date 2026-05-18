@@ -1,5 +1,4 @@
--- Migration: Add FRIENDSHIP table to DigitalDetox
--- Run this against your Railway MySQL database
+
 
 USE DigitalDetox;
 

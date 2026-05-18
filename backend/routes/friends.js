@@ -4,11 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// ─────────────────────────────────────────────
-//  GET /api/friends/users
-//  Returns all users except the logged-in user,
-//  with friendship status for each.
-// ─────────────────────────────────────────────
+
 router.get('/users', authMiddleware, async (req, res) => {
   try {
     const me = req.user.id;

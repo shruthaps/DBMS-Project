@@ -4,11 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// ─────────────────────────────────────────────
-//  GET /api/challenges
-//  Browse all available challenges (SOLO + GROUP).
-//  Includes whether the authenticated user has already joined each one.
-// ─────────────────────────────────────────────
+
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
