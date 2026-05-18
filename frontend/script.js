@@ -2,7 +2,7 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
     ? 'http://localhost:3000/api'
     : 'https://digitaldetox-api.onrender.com/api';
 
-// Helper function to handle fetch requests with authentication
+
 async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('token');
     const headers = {
@@ -29,7 +29,7 @@ async function apiRequest(endpoint, options = {}) {
     return response;
 }
 
-// ========== AUTH FUNCTIONS ==========
+
 function showTab(tab) {
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
@@ -48,7 +48,7 @@ function showTab(tab) {
     }
 }
 
-// Login
+
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
@@ -74,14 +74,14 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Signup
+
 document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
 
-    // Validation Checks
+
     if (!name || !email || !password) {
         return alert("All fields are required!");
     }
@@ -113,14 +113,14 @@ document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Logout
+
 document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     window.location.href = 'Index.html';
 });
 
-// ========== DASHBOARD FUNCTIONS ==========
+
 async function loadDashboard() {
     const userId = localStorage.getItem('userId');
     if (!userId) {
@@ -129,7 +129,7 @@ async function loadDashboard() {
     }
 
     try {
-        // Load user profile
+
         const profileRes = await apiRequest('/profile');
         if (!profileRes || !profileRes.ok) return;
         const profileData = await profileRes.json();
@@ -141,12 +141,19 @@ async function loadDashboard() {
         document.getElementById('currentStreak').innerHTML = `${user.current_streak} days`;
         document.getElementById('shields').innerHTML = user.shields_available;
 
-        // Progress Bar
+
         const progress = document.getElementById('levelProgress');
         if (progress) progress.style.width = `${profileData.level_progress_pct}%`;
 
-        // Load app limits
+
         const limitsRes = await apiRequest('/limits');
+        const logsRes = await apiRequest('/logs');
+        let todayLogs = [];
+        if (logsRes && logsRes.ok) {
+            const logsData = await logsRes.json();
+            todayLogs = logsData.logs || [];
+        }
+
         if (limitsRes && limitsRes.ok) {
             const limits = await limitsRes.json();
             const limitsDiv = document.getElementById('appLimits');
@@ -158,43 +165,61 @@ async function loadDashboard() {
             } else {
                 if (submitSection) submitSection.style.display = 'block';
                 if (submitSection) submitSection.style.display = 'none';
-        limitsDiv.innerHTML = `
+                
+                const hasSyncedToday = todayLogs.length > 0;
+                
+                limitsDiv.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 15px;">
-                ${limits.map(limit => `
-                    <div class="limit-card" style="margin-bottom: 5px; width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span style="font-size: 1.2rem; font-weight: bold;">
-                                        ${limit.app_name.includes('Instagram') ? '📸' : limit.app_name.includes('YouTube') ? '📺' : '📱'} ${limit.app_name}
-                                    </span>
-                                    <button onclick="deleteLimit(${limit.limit_id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px;" title="Delete Limit">🗑️</button>
+                ${limits.map(limit => {
+                    const loggedEntry = todayLogs.find(log => log.limit_id === limit.limit_id);
+                    let statusHtml = '<span style="font-size: 0.8rem; color: var(--text-secondary);">Waiting for sync...</span>';
+                    
+                    if (loggedEntry) {
+                        const isBreached = loggedEntry.limit_breached;
+                        statusHtml = `
+                            <span style="font-weight:bold;color:${isBreached ? '#ff4b2b' : '#00f2fe'};">
+                                Detected: ${loggedEntry.actual_usage_min}m
+                            </span><br>
+                            <small style="color:var(--text-secondary);">${isBreached ? '⚠️ Breached' : '✅ Safe'}</small>
+                        `;
+                    }
+                    
+                    return `
+                        <div class="limit-card" style="margin-bottom: 5px; width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 1.2rem; font-weight: bold;">
+                                            ${limit.app_name.includes('Instagram') ? '📸' : limit.app_name.includes('YouTube') ? '📺' : '📱'} ${limit.app_name}
+                                        </span>
+                                        <button onclick="deleteLimit(${limit.limit_id})" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px;" title="Delete Limit">🗑️</button>
+                                    </div>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                                        Daily Limit: <span style="color: var(--accent-purple);">${limit.daily_limit_min} mins</span>
+                                    </p>
                                 </div>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
-                                    Daily Limit: <span style="color: var(--accent-purple);">${limit.daily_limit_min} mins</span>
-                                </p>
-                            </div>
-                            <div id="status-${limit.limit_id}" style="text-align: right; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; min-width: 120px;">
-                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Waiting for sync...</span>
+                                <div id="status-${limit.limit_id}" style="text-align: right; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; min-width: 120px;">
+                                    ${statusHtml}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
 
             <div style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px; display: flex; flex-direction: column; align-items: flex-end;">
-                <button id="syncBtn" onclick="simulateSync()" class="btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;">
-                    🔄 Sync with Device Data
+                <button id="syncBtn" onclick="simulateSync()" class="btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" ${hasSyncedToday ? 'disabled' : ''}>
+                    ${hasSyncedToday ? '✅ Synced for Today' : '🔄 Sync with Device Data'}
                 </button>
                 <p style="text-align: right; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;">
-                    Last synced: Just now
+                    Last synced: ${hasSyncedToday ? 'Today' : 'Never'}
                 </p>
             </div>
         `;
             }
         }
 
-        // Load active challenges
+
         const challengesRes = await apiRequest('/challenges/mine');
         if (challengesRes && challengesRes.ok) {
             const data = await challengesRes.json();
@@ -215,7 +240,7 @@ async function loadDashboard() {
             }
         }
 
-        // Load coupons
+
         const couponsRes = await apiRequest('/coupons');
         if (couponsRes && couponsRes.ok) {
             const data = await couponsRes.json();
@@ -240,7 +265,7 @@ async function loadDashboard() {
     }
 }
 
-// ========== LOG USAGE ==========
+
 document.getElementById('submitUsageBtn')?.addEventListener('click', async () => {
     const inputs = document.querySelectorAll('.usage-input');
     const logs = Array.from(inputs).map(input => ({
@@ -273,7 +298,7 @@ document.getElementById('submitUsageBtn')?.addEventListener('click', async () =>
     }
 });
 
-// ========== DELETE LIMIT ==========
+
 async function deleteLimit(limitId) {
     if (!confirm("Are you sure you want to delete this app limit?")) return;
 
@@ -283,7 +308,7 @@ async function deleteLimit(limitId) {
         });
 
         if (response && response.ok) {
-            loadDashboard(); // Refresh
+            loadDashboard();
         } else {
             alert('Failed to delete limit');
         }
@@ -292,7 +317,7 @@ async function deleteLimit(limitId) {
     }
 }
 
-// ========== MODAL FUNCTIONS ==========
+
 const modal = document.getElementById('limitModal');
 document.getElementById('openLimitModal')?.addEventListener('click', () => {
     if (modal) modal.style.display = 'flex';
@@ -321,27 +346,27 @@ document.getElementById('saveLimitBtn')?.addEventListener('click', async () => {
     }
 });
 
-// ========== CHALLENGES PAGE ==========
 
-// ── Cached data for the page ──
-let _allUsers   = [];   // everyone from /api/friends/users
-let _myFriends  = [];   // accepted friends
-let _requests   = [];   // pending requests sent TO me
 
-// ── Tab switching ──
+
+let _allUsers   = [];
+let _myFriends  = [];
+let _requests   = [];
+
+
 function switchTab(name) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
     document.getElementById(`panel-${name}`).classList.add('active');
     document.getElementById(`tab-${name}`).classList.add('active');
 
-    // Lazy-load on first switch
+
     if (name === 'friends')   renderAllUsers();
     if (name === 'requests')  renderRequests();
     if (name === 'myfriends') renderMyFriends();
 }
 
-// ── Load everything for the challenges page ──
+
 async function loadChallengesPage() {
     await Promise.all([
         fetchChallenges(),
@@ -349,7 +374,7 @@ async function loadChallengesPage() {
     ]);
 }
 
-// ── Fetch social data ──
+
 async function fetchPeopleData() {
     try {
         const [usersRes, friendsRes, reqRes] = await Promise.all([
@@ -361,7 +386,7 @@ async function fetchPeopleData() {
         if (usersRes && usersRes.ok) {
             _allUsers = (await usersRes.json()).users || [];
         } else {
-            // Surface the actual error so we can debug
+
             const errBody = usersRes ? await usersRes.text() : 'no response';
             console.error('GET /friends/users failed:', usersRes?.status, errBody);
             const container = document.getElementById('allUsersList');
@@ -371,7 +396,7 @@ async function fetchPeopleData() {
         if (friendsRes && friendsRes.ok) _myFriends = (await friendsRes.json()).friends || [];
         if (reqRes && reqRes.ok)         _requests  = (await reqRes.json()).requests  || [];
 
-        // Update badge
+
         const badge = document.getElementById('reqBadge');
         if (badge) {
             badge.textContent = _requests.length;
@@ -384,7 +409,7 @@ async function fetchPeopleData() {
     }
 }
 
-// ── Fetch and render challenges (split SOLO / GROUP) ──
+
 async function fetchChallenges() {
     try {
         const res = await apiRequest('/challenges');
@@ -443,7 +468,7 @@ async function joinChallenge(challengeId) {
     }
 }
 
-// ── Render all users (Find People tab) ──
+
 function renderAllUsers() {
     const container = document.getElementById('allUsersList');
     if (!container) return;
@@ -454,7 +479,7 @@ function renderAllUsers() {
     }
 
     const q = (document.getElementById('peopleSearch')?.value || '').toLowerCase();
-    // Guard against null names from bad DB rows
+
     const filtered = _allUsers.filter(u => u.name && u.name.toLowerCase().includes(q));
 
     if (filtered.length === 0) {
@@ -505,7 +530,7 @@ function personCard(u) {
     `;
 }
 
-// ── Render friend requests ──
+
 function renderRequests() {
     const container = document.getElementById('requestsList');
     if (!container) return;
@@ -535,7 +560,7 @@ function renderRequests() {
     `).join('');
 }
 
-// ── Render my friends ──
+
 function renderMyFriends() {
     const container = document.getElementById('myFriendsList');
     if (!container) return;
@@ -563,13 +588,13 @@ function renderMyFriends() {
     `).join('');
 }
 
-// ── Social Actions ──
+
 async function sendFriendRequest(userId) {
     const res = await apiRequest(`/friends/request/${userId}`, { method: 'POST' });
     const data = await res.json();
     alert(data.message);
     if (res.ok) {
-        // Optimistically update local data and re-render
+
         const u = _allUsers.find(x => x.user_id === userId);
         if (u) { u.friendship_status = 'PENDING'; u.request_direction = 'me'; }
         renderAllUsers();
@@ -580,12 +605,12 @@ async function acceptRequest(friendshipId, userId) {
     const res = await apiRequest(`/friends/accept/${friendshipId}`, { method: 'POST' });
     const data = await res.json();
     if (res.ok) {
-        // Refresh all social data then re-render current tab
+
         await fetchPeopleData();
         renderRequests();
         renderMyFriends();
         renderAllUsers();
-        populateFriendsCheckList(); // refresh modal list too
+        populateFriendsCheckList();
         alert('Friend added! 🎉');
     } else {
         alert(data.message);
@@ -605,7 +630,7 @@ async function declineRequest(friendshipId, userId) {
     }
 }
 
-// ── Create Group Modal ──
+
 function openCreateGroupModal() {
     populateFriendsCheckList();
     document.getElementById('createGroupModal').style.display = 'flex';
@@ -637,6 +662,14 @@ function populateFriendsCheckList() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
+    const token = localStorage.getItem('token');
+
+    const isAuthPage = path.endsWith('Index.html') || path.endsWith('/') || path === '' || !path.includes('.html');
+    if (isAuthPage && token) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
     if (path.includes('dashboard')) {
         loadDashboard();
     } else if (path.includes('challenges')) {
@@ -644,13 +677,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Handle group creation form submit
+
 const createGroupForm = document.getElementById('createGroupForm');
 if (createGroupForm) {
     createGroupForm.onsubmit = async (e) => {
         e.preventDefault();
 
-        // Collect selected friend IDs
+
         const checked = [...document.querySelectorAll('input[name="friendSelect"]:checked')];
         const invited_member_ids = checked.map(cb => parseInt(cb.value));
 
@@ -683,7 +716,7 @@ if (createGroupForm) {
     };
 }
 
-// ── Simulate Sync (dashboard) ──
+
 async function simulateSync() {
     const syncBtn = document.getElementById('syncBtn');
     const cards = document.querySelectorAll('.limit-card');
@@ -740,19 +773,3 @@ async function simulateSync() {
         syncBtn.innerHTML = '🔄 Sync with Device Data';
     }
 }
-
-async function deleteLimit(limitId) {
-    if (!confirm('Are you sure you want to delete this limit?')) return;
-
-    try {
-        const res = await apiRequest(`/limits/${limitId}`, { method: 'DELETE' });
-        if (res.ok) {
-            loadDashboard();
-        } else {
-            alert('Failed to delete limit.');
-        }
-    } catch (err) {
-        alert('Error deleting limit.');
-    }
-}
-
