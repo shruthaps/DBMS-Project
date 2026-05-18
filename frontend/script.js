@@ -260,8 +260,62 @@ async function loadDashboard() {
                 `).join('');
             }
         }
+
+        const myCouponsRes = await apiRequest('/coupons/mine');
+        if (myCouponsRes && myCouponsRes.ok) {
+            const myData = await myCouponsRes.json();
+            const myCoupons = myData.coupons;
+            const myCouponsDiv = document.getElementById('myCoupons');
+            if (myCouponsDiv) {
+                if (myCoupons.length === 0) {
+                    myCouponsDiv.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">No coupons redeemed yet.</p>';
+                } else {
+                    myCouponsDiv.innerHTML = myCoupons.map(coupon => `
+                        <div class="coupon-card" style="background: rgba(255,255,255,0.01); border: 1px dashed var(--glass-border); margin-bottom: 10px; padding: 12px 18px;">
+                            <div>
+                                <strong style="font-size: 0.95rem;">🎫 ${coupon.brand_name}</strong>
+                                <div style="color: var(--success); font-size: 0.85rem; font-weight: bold; margin-top: 2px;">
+                                    Code: <span style="font-family: monospace; font-size: 0.95rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--accent-gold);">${coupon.redemption_code}</span>
+                                </div>
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 4px;">
+                                    ${coupon.discount_value} OFF · Exp: ${coupon.expiry_date ? new Date(coupon.expiry_date).toLocaleDateString() : 'Never'}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
     } catch (err) {
         console.error(err);
+    }
+}
+
+
+async function redeemCoupon(couponId) {
+    if (!confirm('Are you sure you want to spend your points to redeem this coupon?')) {
+        return;
+    }
+
+    try {
+        const res = await apiRequest(`/coupons/${couponId}/redeem`, {
+            method: 'POST'
+        });
+
+        if (res && res.ok) {
+            const data = await res.json();
+            const red = data.redemption;
+            
+            alert(`🎉 Coupon redeemed successfully!\n\nBrand: ${red.brand_name}\nDiscount: ${red.discount_value} OFF\n\nYOUR REDEMPTION CODE:\n👉 ${red.redemption_code} 👈\n\nPoints remaining: ${red.points_remaining}`);
+            
+            loadDashboard();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Redemption failed: ${errData.message || 'Server error'}`);
+        }
+    } catch (err) {
+        console.error('Error redeeming coupon:', err);
+        alert('An error occurred while trying to redeem the coupon.');
     }
 }
 
