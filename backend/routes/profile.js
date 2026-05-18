@@ -24,7 +24,7 @@ router.get('/', authMiddleware, async (req, res) => {
          l.coupon_discount_pct,
          l.badge_icon
        FROM USER u
-       JOIN LEVEL l ON u.level_id = l.level_id
+       LEFT JOIN LEVEL l ON u.level_id = l.level_id
        WHERE u.user_id = ?`,
       [userId]
     );
@@ -33,20 +33,38 @@ router.get('/', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // Calculate progress toward the next level
+    // Fetch all levels
     const [levels] = await db.query(
       'SELECT * FROM LEVEL ORDER BY min_points ASC'
     );
 
-    const currentLevelIndex = levels.findIndex(l => l.level_id === profile.level_id);
+    // Fallback level resolution if level_id is missing/null in the DB
+    let levelId = profile.level_id;
+    let levelName = profile.level_name || 'Bronze';
+    let levelMinPoints = profile.level_min_points || 0;
+    let levelMaxPoints = profile.level_max_points || 40;
+    let couponDiscountPct = profile.coupon_discount_pct || 0.00;
+    let badgeIcon = profile.badge_icon || '🥉';
+
+    if (!levelId && levels.length > 0) {
+      const currentLvl = levels.find(l => profile.total_points >= l.min_points && profile.total_points <= l.max_points) || levels[0];
+      levelId = currentLvl.level_id;
+      levelName = currentLvl.name;
+      levelMinPoints = currentLvl.min_points;
+      levelMaxPoints = currentLvl.max_points;
+      couponDiscountPct = currentLvl.coupon_discount_pct;
+      badgeIcon = currentLvl.badge_icon;
+    }
+
+    const currentLevelIndex = levels.findIndex(l => l.level_id === levelId);
     const nextLevel         = levels[currentLevelIndex + 1] || null;
 
     let progressPct = 100; // Already at max level
     let pointsToNextLevel = 0;
 
     if (nextLevel) {
-      const pointsInCurrentBand = nextLevel.min_points - profile.level_min_points;
-      const pointsEarned        = profile.total_points - profile.level_min_points;
+      const pointsInCurrentBand = nextLevel.min_points - levelMinPoints;
+      const pointsEarned        = profile.total_points - levelMinPoints;
       progressPct               = Math.min(100, Math.round((pointsEarned / pointsInCurrentBand) * 100));
       pointsToNextLevel         = nextLevel.min_points - profile.total_points;
     }
@@ -61,12 +79,12 @@ router.get('/', authMiddleware, async (req, res) => {
         longest_streak:    profile.longest_streak,
         shields_available: profile.shields_available,
         level: {
-          level_id:           profile.level_id,
-          name:               profile.level_name,
-          badge_icon:         profile.badge_icon,
-          coupon_discount_pct: profile.coupon_discount_pct,
-          min_points:         profile.level_min_points,
-          max_points:         profile.level_max_points,
+          level_id:            levelId,
+          name:                levelName,
+          badge_icon:          badgeIcon,
+          coupon_discount_pct: couponDiscountPct,
+          min_points:          levelMinPoints,
+          max_points:          levelMaxPoints,
         },
         next_level: nextLevel
           ? {

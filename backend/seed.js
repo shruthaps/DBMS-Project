@@ -73,7 +73,23 @@ async function seedDatabase() {
 
     // 2. Ensure LEVEL values are exactly as requested
     const [levels] = await db.query('SELECT COUNT(*) as count FROM LEVEL');
-    if (levels[0].count > 0) {
+    if (levels[0].count === 0) {
+      console.log('LEVEL table is empty. Seeding initial levels...');
+      const initialLevels = [
+        ['Bronze', 0, 40, 0.00, 0, '🥉'],
+        ['Silver', 41, 70, 10.00, 1, '🥈'],
+        ['Gold', 71, 100, 20.00, 2, '🥇'],
+        ['Platinum', 101, 999999, 30.00, 3, '👑']
+      ];
+      for (const [name, min, max, discount, shields, badge] of initialLevels) {
+        await db.query(
+          `INSERT INTO LEVEL (name, min_points, max_points, coupon_discount_pct, shields_granted, badge_icon)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [name, min, max, discount, shields, badge]
+        );
+      }
+      console.log('LEVEL table successfully seeded!');
+    } else {
       console.log('Ensuring LEVEL point limits are up to date...');
       await db.query('UPDATE LEVEL SET min_points = 0, max_points = 40 WHERE name = "Bronze"');
       await db.query('UPDATE LEVEL SET min_points = 41, max_points = 70 WHERE name = "Silver"');
