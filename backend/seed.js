@@ -4,6 +4,26 @@ async function seedDatabase() {
   try {
     console.log('Checking database tables to seed...');
 
+    // Migration: Ensure LEVEL has badge_icon column
+    try {
+      await db.query('ALTER TABLE LEVEL ADD COLUMN badge_icon VARCHAR(255) DEFAULT NULL');
+      console.log('Successfully added badge_icon column to LEVEL table!');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME' && e.errno !== 1060) {
+        console.error('Error adding badge_icon column:', e);
+      }
+    }
+
+    // Migration: Ensure LEVEL has shields_granted column
+    try {
+      await db.query('ALTER TABLE LEVEL ADD COLUMN shields_granted INT DEFAULT 0');
+      console.log('Successfully added shields_granted column to LEVEL table!');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME' && e.errno !== 1060) {
+        console.error('Error adding shields_granted column:', e);
+      }
+    }
+
     // 1. Seed Solo Challenges if empty
     const [challenges] = await db.query('SELECT COUNT(*) as count FROM CHALLENGE');
     if (challenges[0].count === 0) {
